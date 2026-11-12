@@ -1,0 +1,20 @@
+{
+  "name": "web",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/react": "7.1.8",
+    "@astrojs/vercel": "11.0.21",
+    "@keystatic/astro": "6.0.0",
+    "@keystatic/core": "0.6.9",
+    "astro": "7.4.11",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  }
+}
