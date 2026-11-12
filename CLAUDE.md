@@ -16,8 +16,10 @@ esta web, no de la plantilla.
   `src/pages/api/cms-*.ts`. No se tocan a mano: se actualizan con la versión
   que da la herramienta `muro_actual` del conector de Clientes
   (`muro-version.txt` dice cuál lleva).
-- En Vercel hacen falta `CMS_SITE_ID` y `CMS_SITE_KEY`. Las pone la orden que
-  devuelve `alta_web`; la clave nunca se escribe en el chat ni en el código.
+- En Vercel hacen falta `CMS_SITE_ID` (el `cms_site_id` que devuelve
+  `alta_web`, no es secreto) y `CMS_SITE_KEY` (la pone la `orden_clave_vercel`
+  de `alta_web`, tal cual). La clave nunca se escribe en el chat ni en el
+  código.
 
 ## Antes de cambiar nada
 

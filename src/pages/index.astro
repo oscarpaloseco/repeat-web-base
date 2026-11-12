@@ -1,0 +1,16 @@
+---
+// Página en blanco: el contenido sale de src/content/inicio.json, que se edita
+// desde /keystatic. Toda la web se diseña encima de esto.
+import inicio from '../content/inicio.json';
+---
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{inicio.titulo}</title>
+  </head>
+  <body>
+    <h1>{inicio.titulo}</h1>
+    <p>{inicio.texto}</p>
+  </body>
+</html>

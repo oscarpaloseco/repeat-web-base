@@ -1,0 +1,94 @@
+---
+export const prerender = false;
+import { CONFIG_MISSING, esMensajeDelMuro, llamarApp, mensajeDe, safePath } from '../lib/cms-app';
+
+const url = Astro.url;
+const invitacion = url.searchParams.get('invite') || '';
+const next = safePath(url.searchParams.get('next'));
+
+// Solo se enseñan textos del propio muro: un `?error=` inventado no se pinta.
+const errorParam = url.searchParams.get('error') || '';
+let error = esMensajeDelMuro(errorParam) ? errorParam : '';
+
+// Solo invitación PERSONAL: el email lo sabe el servicio de acceso, que lo
+// guardó al invitar. El registro abierto (cualquiera escribe su email) no
+// existe a propósito.
+let modo: 'config' | 'set' | 'login' = CONFIG_MISSING ? 'config' : 'login';
+let email = '';
+if (modo === 'login' && invitacion) {
+  const r = await llamarApp<{ email: string }>('invitacion', { invite: invitacion });
+  if (r.ok && typeof r.data.email === 'string' && r.data.email.includes('@')) {
+    modo = 'set';
+    email = r.data.email;
+  } else if (!r.ok) {
+    error = error || mensajeDe(r);
+  }
+}
+
+// La página lleva el email de la invitación: que no se guarde en ninguna caché.
+Astro.response.headers.set('Cache-Control', 'no-store');
+---
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <meta name="referrer" content="no-referrer" />
+  <title>Acceso al editor</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; font-family: system-ui, -apple-system, sans-serif; background: #0f1012; color: #fff; }
+    .card { width: min(92vw, 380px); background: #17181b; border: 1px solid #2a2c30; border-radius: 16px; padding: 28px; }
+    h1 { font-size: 18px; margin: 0 0 4px; }
+    p.sub { margin: 0 0 20px; color: #9aa0a6; font-size: 13px; }
+    label { display: block; font-size: 12px; color: #9aa0a6; margin: 14px 0 6px; }
+    input { width: 100%; padding: 11px 12px; border-radius: 9px; border: 1px solid #2a2c30; background: #0f1012; color: #fff; font-size: 14px; outline: none; }
+    input:focus { border-color: #6b7cff; }
+    button { width: 100%; margin-top: 20px; padding: 12px; border: 0; border-radius: 9px; background: #6b7cff; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer; }
+    button:hover { background: #5a6bf0; }
+    .err { margin-top: 14px; background: #3a1113; border: 1px solid #612024; color: #ff9ea3; font-size: 12px; padding: 9px 11px; border-radius: 8px; }
+    .muted { color: #6b7076; font-size: 11px; margin-top: 16px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    {modo === 'config' ? (
+      <>
+        <h1>Editor no disponible</h1>
+        <p class="sub">Falta configuración en este despliegue. Avisa a quien mantiene tu web.</p>
+      </>
+    ) : modo === 'set' ? (
+      <>
+        <h1>Crea tu contraseña</h1>
+        <p class="sub">Para <strong>{email}</strong>. Elige una contraseña y ya podrás editar tu web.</p>
+        {error && <div class="err">{error}</div>}
+        <form method="POST" action="/api/cms-set-password">
+          <input type="hidden" name="invite" value={invitacion} />
+          <label>Contraseña (mínimo 8 caracteres)</label>
+          <input type="password" name="password" required minlength="8" maxlength="200" autocomplete="new-password" />
+          <label>Repite la contraseña</label>
+          <input type="password" name="password2" required minlength="8" maxlength="200" autocomplete="new-password" />
+          <button type="submit">Crear contraseña y entrar</button>
+        </form>
+      </>
+    ) : (
+      <>
+        <h1>Acceso al editor</h1>
+        <p class="sub">Entra con tu email y contraseña para editar tu web.</p>
+        {error && <div class="err">{error}</div>}
+        <form method="POST" action="/api/cms-login">
+          <input type="hidden" name="next" value={next} />
+          <label>Email</label>
+          <input type="email" name="email" required autocomplete="email" />
+          <label>Contraseña</label>
+          <input type="password" name="password" required autocomplete="current-password" />
+          <button type="submit">Entrar</button>
+        </form>
+        <p class="muted">¿Problemas para entrar? Escribe a quien mantiene tu web.</p>
+      </>
+    )}
+  </div>
+</body>
+</html>
